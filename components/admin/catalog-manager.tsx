@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -85,6 +86,9 @@ export const CatalogManager = ({
 		},
 	});
 
+	const currentImageUrl = itemForm.watch("image_url");
+	const currentItemName = itemForm.watch("name");
+
 	const resetCategoryForm = (category?: MenuCategory) => {
 		categoryForm.reset(
 			category
@@ -159,11 +163,18 @@ export const CatalogManager = ({
 				const file = fileList[0];
 				setUploading(true);
 				const uploadData = await createSignedImageUploadUrlAction();
-				const formData = new FormData();
-				formData.append("file", file);
-				const response = await fetch(uploadData.signedUrl, {
-					method: "POST",
-					body: formData,
+				const signedUrl = new URL(uploadData.signedUrl);
+				if (uploadData.token) {
+					signedUrl.searchParams.set("token", uploadData.token);
+				}
+				const response = await fetch(signedUrl.toString(), {
+					method: "PUT",
+					headers: {
+						"Content-Type": file.type,
+						"x-upsert": "false",
+						"cache-control": "max-age=3600",
+					},
+					body: file,
 				});
 				if (!response.ok) {
 					throw new Error("Upload gagal");
@@ -509,19 +520,31 @@ export const CatalogManager = ({
 								Gambar
 							</label>
 							<Input id="menu-item-image" type="file" accept="image/*" />
-							{itemForm.watch("image_url") && (
-								<div className="flex items-center justify-between rounded-md bg-muted p-2 text-xs text-muted-foreground">
-									<span className="truncate">
-										Gambar saat ini: {itemForm.watch("image_url")}
-									</span>
-									<Button
-										type="button"
-										size="sm"
-										variant="ghost"
-										onClick={() => itemForm.setValue("image_url", null)}
+							{currentImageUrl && (
+								<div className="space-y-3 rounded-md border border-border p-3 text-xs text-muted-foreground">
+									<div className="flex items-center justify-between">
+										<span className="font-medium">Gambar saat ini</span>
+										<Button
+											type="button"
+											size="sm"
+											variant="ghost"
+											onClick={() => itemForm.setValue("image_url", null)}
+										>
+											Hapus
+										</Button>
+									</div>
+									<img
+										src={currentImageUrl}
+										alt={`Preview gambar ${currentItemName || "menu"}`}
+										className="h-32 w-32 rounded-md object-cover"
+									/>
+									<Link
+										href={currentImageUrl}
+										target="_blank"
+										className="block truncate text-[10px] text-muted-foreground/80"
 									>
-										Hapus
-									</Button>
+										Buka gambar
+									</Link>
 								</div>
 							)}
 						</div>
