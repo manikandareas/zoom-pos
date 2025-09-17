@@ -1,5 +1,16 @@
 "use client";
 
+import { Minus, Plus, ShoppingCart } from "lucide-react";
+import Image from "next/image";
+import {
+	useActionState,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
+import { useFormStatus } from "react-dom";
 import {
 	type SubmitOrderResult,
 	submitOrderAction,
@@ -34,9 +45,6 @@ import {
 import type { CategoryWithItems } from "@/lib/data/menu";
 import type { Order, OrderItem, OrderStatus } from "@/lib/supabase/types";
 import { cn } from "@/lib/utils";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
-import { useActionState, useCallback, useEffect, useMemo, useState } from "react";
-import { useFormStatus } from "react-dom";
 
 interface GuestOrderClientProps {
 	room: {
@@ -99,18 +107,52 @@ export const GuestOrderClient = ({
 		() => cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0),
 		[cartItems],
 	);
+	const lastHandledActionRef = useRef<SubmitOrderResult | null>(null);
+	const noteRef = useRef(note);
+	const cartItemsRef = useRef<CartItem[]>(cartItems);
+	const subTotalRef = useRef(subTotal);
 
 	useEffect(() => {
-		if (actionState?.success) {
-			const noteSnapshot = note;
-			const cartSnapshot = cartItems;
-			const totalSnapshot = subTotal;
-			setCart({});
-			setNote("");
-			if (!actionState.orderId) return;
+		noteRef.current = note;
+	}, [note]);
 
-			const createdAt = new Date().toISOString();
-			setOrders((prev) => [
+	useEffect(() => {
+		cartItemsRef.current = cartItems;
+	}, [cartItems]);
+
+	useEffect(() => {
+		subTotalRef.current = subTotal;
+	}, [subTotal]);
+
+	useEffect(() => {
+		if (!actionState?.success) {
+			return;
+		}
+
+		if (lastHandledActionRef.current === actionState) {
+			return;
+		}
+
+		lastHandledActionRef.current = actionState;
+
+		const noteSnapshot = noteRef.current;
+		const cartSnapshot = cartItemsRef.current;
+		const totalSnapshot = subTotalRef.current;
+
+		setCart({});
+		setNote("");
+
+		if (!actionState.orderId) {
+			setSheetOpen(false);
+			return;
+		}
+
+		const createdAt = new Date().toISOString();
+		setOrders((prev) => {
+			if (prev.some((order) => order.id === actionState.orderId)) {
+				return prev;
+			}
+			return [
 				{
 					id: actionState.orderId as string,
 					room_id: room.id,
@@ -133,10 +175,10 @@ export const GuestOrderClient = ({
 					})),
 				},
 				...prev,
-			]);
-			setSheetOpen(false);
-		}
-	}, [actionState, cartItems, guestId, note, room.id, subTotal]);
+			];
+		});
+		setSheetOpen(false);
+	}, [actionState, guestId, room.id]);
 
 	const handleStatusBroadcast = useCallback(
 		(payload: { order_id: string; status: string; reason?: string | null }) => {
@@ -245,6 +287,16 @@ export const GuestOrderClient = ({
 					bantuan.
 				</Alert>
 			)}
+
+			{/* <div className="relative h-96 w-full"> */}
+			<Image
+				className="object-cover rounded-md"
+				alt="Promotion Banner"
+				src={"/banner.jpg"}
+				width={1024}
+				height={400}
+			/>
+			{/* </div> */}
 
 			<div className="grid gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2">

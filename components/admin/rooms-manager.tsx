@@ -162,7 +162,7 @@ export const RoomsManager = ({ rooms, codes }: RoomsManagerProps) => {
 		<div className="space-y-6">
 			{errorMessage && <Alert variant="destructive">{errorMessage}</Alert>}
 			<Card>
-				<CardHeader className="flex items-center justify-between gap-2">
+				<CardHeader className="flex items-center flex-row justify-between gap-2">
 					<CardTitle>Kamar</CardTitle>
 					<Button onClick={() => handleOpenRoomDialog()}>
 						<Plus className="mr-2 h-4 w-4" /> Tambah Kamar
@@ -234,22 +234,22 @@ export const RoomsManager = ({ rooms, codes }: RoomsManagerProps) => {
 											))}
 										</div>
 									</Td>
-									<Td className="flex flex-wrap gap-2">
+									<Td className="flex flex-row gap-2">
 										<Button
-											size="sm"
+											size="icon"
 											variant="outline"
 											onClick={() => handleOpenRoomDialog(room)}
 										>
-											<Pencil className="mr-1 h-4 w-4" /> Edit
+											<Pencil className="h-4 w-4" />
 										</Button>
 										<Button
-											size="sm"
+											size="icon"
 											variant="destructive"
 											onClick={() =>
 												startTransition(async () => deleteRoomAction(room.id))
 											}
 										>
-											<Trash2 className="mr-1 h-4 w-4" /> Hapus
+											<Trash2 className="h-4 w-4" />
 										</Button>
 									</Td>
 								</Tr>
@@ -274,36 +274,36 @@ export const RoomsManager = ({ rooms, codes }: RoomsManagerProps) => {
 					</DialogHeader>
 					<form className="space-y-4" onSubmit={onSubmitRoom}>
 						<Input type="hidden" {...roomForm.register("id")} />
-					<div className="space-y-2">
-						<label htmlFor="number" className="text-sm font-medium">
-							Nomor
-						</label>
-						<Input
-							id="number"
-							placeholder="Contoh: 301"
-							{...roomForm.register("number")}
-						/>
-						{roomForm.formState.errors.number && (
-							<p className="text-xs text-destructive">
-								{roomForm.formState.errors.number.message}
-							</p>
-						)}
-					</div>
-					<div className="space-y-2">
-						<label htmlFor="label" className="text-sm font-medium">
-							Nama
-						</label>
-						<Input
-							id="label"
-							placeholder="Contoh: Deluxe Twin"
-							{...roomForm.register("label")}
-						/>
-						{roomForm.formState.errors.label && (
-							<p className="text-xs text-destructive">
-								{roomForm.formState.errors.label.message}
-							</p>
-						)}
-					</div>
+						<div className="space-y-2">
+							<label htmlFor="number" className="text-sm font-medium">
+								Nomor
+							</label>
+							<Input
+								id="number"
+								placeholder="Contoh: 301"
+								{...roomForm.register("number")}
+							/>
+							{roomForm.formState.errors.number && (
+								<p className="text-xs text-destructive">
+									{roomForm.formState.errors.number.message}
+								</p>
+							)}
+						</div>
+						<div className="space-y-2">
+							<label htmlFor="label" className="text-sm font-medium">
+								Nama
+							</label>
+							<Input
+								id="label"
+								placeholder="Contoh: Deluxe Twin"
+								{...roomForm.register("label")}
+							/>
+							{roomForm.formState.errors.label && (
+								<p className="text-xs text-destructive">
+									{roomForm.formState.errors.label.message}
+								</p>
+							)}
+						</div>
 						<div className="flex items-center justify-between rounded-md border border-border p-3">
 							<div>
 								<p className="text-sm font-medium">Aktif</p>
@@ -354,7 +354,9 @@ export const RoomsManager = ({ rooms, codes }: RoomsManagerProps) => {
 						</DialogTitle>
 					</DialogHeader>
 					<form className="space-y-4" onSubmit={onSubmitCode}>
-						<Input type="hidden" {...codeForm.register("id")} />
+						{codeDialog.code && (
+							<Input type="hidden" {...codeForm.register("id")} />
+						)}
 						<Input type="hidden" {...codeForm.register("room_id")} />
 						<div className="space-y-2">
 							<label htmlFor="code" className="text-sm font-medium">
