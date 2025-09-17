@@ -78,3 +78,26 @@ export const deleteRoomCode = async (codeId: string) => {
     throw error;
   }
 };
+
+export const createRoomCode = async (input: {
+  room_id: string;
+  code: string;
+  is_active?: boolean;
+}) => {
+  const service = getSupabaseServiceRoleClient();
+  const { data, error } = await service
+    .from("room_codes")
+    .insert({
+      room_id: input.room_id,
+      code: input.code,
+      is_active: input.is_active ?? true,
+    })
+    .select("id, room_id, code, is_active, created_at")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data as RoomCode;
+};

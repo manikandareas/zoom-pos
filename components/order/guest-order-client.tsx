@@ -309,6 +309,15 @@ export const GuestOrderClient = ({
 							<div className="grid gap-3">
 								{category.items.map((item) => (
 									<Card key={item.id}>
+										{item.image_url && (
+											<Image
+												src={item.image_url}
+												alt={item.name}
+												width={400}
+												height={300}
+												className="object-cover rounded-md"
+											/>
+										)}
 										<CardHeader className="flex flex-row items-start justify-between gap-4">
 											<div>
 												<CardTitle>{item.name}</CardTitle>
@@ -408,7 +417,10 @@ export const GuestOrderClient = ({
 									))}
 								</div>
 								<div className="space-y-2">
-									<label htmlFor="note" className="text-xs font-medium text-muted-foreground">
+									<label
+										htmlFor="note"
+										className="text-xs font-medium text-muted-foreground"
+									>
 										Catatan (opsional)
 									</label>
 									<Textarea
@@ -574,7 +586,10 @@ export const GuestOrderClient = ({
 								))}
 							</div>
 							<div className="space-y-2">
-								<label htmlFor="note" className="text-xs font-medium text-muted-foreground">
+								<label
+									htmlFor="note"
+									className="text-xs font-medium text-muted-foreground"
+								>
 									Catatan (opsional)
 								</label>
 								<Textarea

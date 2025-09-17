@@ -22,6 +22,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { InvoicePrintButton } from "@/components/admin/invoice-print-button";
 import { Table, Tbody, Td, Th, Thead, Tr } from "@/components/ui/table";
 import {
 	CURRENCY_FORMATTER,
@@ -217,6 +218,7 @@ export const BillingBoard = ({ summary, initialRows }: BillingBoardProps) => {
 								<Th>Status</Th>
 								<Th>Total</Th>
 								<Th>Dibuat</Th>
+								<Th className="text-right">Aksi</Th>
 							</Tr>
 						</Thead>
 						<Tbody>
@@ -245,12 +247,24 @@ export const BillingBoard = ({ summary, initialRows }: BillingBoardProps) => {
 									<Td className="text-xs text-muted-foreground">
 										{new Date(row.created_at).toLocaleString("id-ID")}
 									</Td>
+									<Td className="text-right">
+										{row.status === "BILLED" ? (
+											<InvoicePrintButton
+												href={`/admin/billing/invoice/${row.order_id}?print=1`}
+												label="Cetak"
+												size="sm"
+												variant="outline"
+											/>
+										) : (
+											<span className="text-xs text-muted-foreground">-</span>
+										)}
+									</Td>
 								</Tr>
 							))}
 							{rows.length === 0 && (
 								<Tr>
 									<Td
-										colSpan={5}
+										colSpan={6}
 										className="py-8 text-center text-sm text-muted-foreground"
 									>
 										Tidak ada order untuk filter ini.

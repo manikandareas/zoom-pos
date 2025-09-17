@@ -13,8 +13,11 @@ export default async function AdminLayout({
   const { user } = await getAuthContext();
 
   return (
-    <div className="min-h-screen bg-muted/20">
-      <header className="border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="min-h-screen bg-muted/20" data-admin-shell>
+      <header
+        data-admin-header
+        className="border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      >
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4">
           <div className="flex items-center gap-8">
             <Link href="/admin/orders" className="text-lg font-semibold">
@@ -34,7 +37,9 @@ export default async function AdminLayout({
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-6xl px-6 py-8">{children}</main>
+      <main data-admin-main className="mx-auto w-full max-w-6xl px-6 py-8">
+        {children}
+      </main>
     </div>
   );
 }

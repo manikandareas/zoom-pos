@@ -48,6 +48,7 @@ Hotel ingin memindahkan pemesanan makanan ke web lewat **QR unik per kamar**. Ta
 **Fase 1 (MVP)**
 
 * QR per kamar, anonymous sign-in, order flow lengkap, dashboard admin realtime, export data (CSV), Storage gambar menu.
+* Kode kamar digenerate otomatis (tanpa input manual) dan admin bisa unduh QRIS siap cetak dari dashboard.
   **Fase 2**
 * Role manajemen admin (tambah admin lain), laporan periode, templated invoice (PDF).
   **Out-of-scope:** payment online, stok, multi-hotel.

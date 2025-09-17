@@ -14,6 +14,7 @@ import {
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { InvoicePrintButton } from "@/components/admin/invoice-print-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Dialog,
@@ -477,6 +478,15 @@ export const OrdersBoard = ({
 														"Tandai Billed"
 													)}
 												</Button>
+											)}
+											{order.status === "BILLED" && (
+												<InvoicePrintButton
+													href={`/admin/billing/invoice/${order.id}?print=1`}
+													label="Cetak Invoice"
+													size="sm"
+													variant="outline"
+													className="w-full justify-center"
+												/>
 											)}
 										</Td>
 									</Tr>

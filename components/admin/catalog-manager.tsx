@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -533,10 +534,12 @@ export const CatalogManager = ({
 											Hapus
 										</Button>
 									</div>
-									<img
+									<Image
 										src={currentImageUrl}
 										alt={`Preview gambar ${currentItemName || "menu"}`}
-										className="h-32 w-32 rounded-md object-cover"
+										width={128}
+										height={128}
+										className="rounded-md object-cover"
 									/>
 									<Link
 										href={currentImageUrl}
