@@ -7,7 +7,8 @@ export const listRooms = async (): Promise<Room[]> => {
   const service = getSupabaseServiceRoleClient();
   const { data, error } = await service
     .from("rooms")
-    .select("id, label, number, is_active, created_at, updated_at")
+    .select("id, label, number, is_active, deleted_at, created_at, updated_at")
+    .is("deleted_at", null)
     .order("number", { ascending: true });
 
   if (error) {
@@ -34,10 +35,25 @@ export const upsertRoom = async (room: Partial<Room>) => {
 
 export const deleteRoom = async (roomId: string) => {
   const service = getSupabaseServiceRoleClient();
-  const { error } = await service.from("rooms").delete().eq("id", roomId);
+  const now = new Date().toISOString();
+  const { error } = await service
+    .from("rooms")
+    .update({ is_active: false, deleted_at: now })
+    .eq("id", roomId)
+    .is("deleted_at", null);
 
   if (error) {
     throw error;
+  }
+
+  const { error: codesError } = await service
+    .from("room_codes")
+    .update({ is_active: false, deleted_at: now })
+    .eq("room_id", roomId)
+    .is("deleted_at", null);
+
+  if (codesError) {
+    throw codesError;
   }
 };
 
@@ -45,7 +61,8 @@ export const listRoomCodes = async (): Promise<RoomCode[]> => {
   const service = getSupabaseServiceRoleClient();
   const { data, error } = await service
     .from("room_codes")
-    .select("id, room_id, code, is_active, created_at")
+    .select("id, room_id, code, is_active, deleted_at, created_at")
+    .is("deleted_at", null)
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -72,7 +89,12 @@ export const upsertRoomCode = async (code: Partial<RoomCode>) => {
 
 export const deleteRoomCode = async (codeId: string) => {
   const service = getSupabaseServiceRoleClient();
-  const { error } = await service.from("room_codes").delete().eq("id", codeId);
+  const now = new Date().toISOString();
+  const { error } = await service
+    .from("room_codes")
+    .update({ is_active: false, deleted_at: now })
+    .eq("id", codeId)
+    .is("deleted_at", null);
 
   if (error) {
     throw error;
@@ -92,7 +114,7 @@ export const createRoomCode = async (input: {
       code: input.code,
       is_active: input.is_active ?? true,
     })
-    .select("id, room_id, code, is_active, created_at")
+    .select("id, room_id, code, is_active, deleted_at, created_at")
     .single();
 
   if (error) {

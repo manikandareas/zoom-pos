@@ -30,7 +30,7 @@ export const getUnbilledOrdersByRoom = async (): Promise<RoomBillingSummary[]> =
   const summaryMap = new Map<string, RoomBillingSummary>();
 
   for (const row of data ?? []) {
-    const room = row.room;
+    const room = Array.isArray(row.room) ? row.room[0] : row.room;
     if (!room) continue;
 
     const current = summaryMap.get(row.room_id) ?? {
@@ -64,7 +64,7 @@ export const getBillingRows = async (
     .from("orders")
     .select(
       `id, room_id, guest_id, status, sub_total, note, rejection_reason, created_at, updated_at,
-       rooms ( label, number )`
+       room:rooms ( label, number )`
     )
     .order("created_at", { ascending: true });
 
@@ -78,17 +78,20 @@ export const getBillingRows = async (
     throw error;
   }
 
-  return (data ?? []).map((order) => ({
-    order_id: order.id,
-    room_id: order.room_id,
-    room_label: order.rooms?.label ?? "",
-    room_number: order.rooms?.number ?? "",
-    guest_id: order.guest_id,
-    sub_total: Number(order.sub_total ?? 0),
-    status: order.status,
-    created_at: order.created_at,
-    updated_at: order.updated_at,
-  }));
+  return (data ?? []).map((order) => {
+    const room = Array.isArray(order.room) ? order.room[0] : order.room;
+    return {
+      order_id: order.id,
+      room_id: order.room_id,
+      room_label: room?.label ?? "",
+      room_number: room?.number ?? "",
+      guest_id: order.guest_id,
+      sub_total: Number(order.sub_total ?? 0),
+      status: order.status,
+      created_at: order.created_at,
+      updated_at: order.updated_at,
+    } satisfies BillingSummaryRow;
+  });
 };
 
 export const markOrdersBilledByRoom = async (roomId: string) => {

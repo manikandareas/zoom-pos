@@ -12,7 +12,8 @@ export const getRoomByCode = async (code: string) => {
   const { data, error } = await service
     .from("room_codes")
     .select(
-      `id, code, is_active, created_at, room:rooms ( id, label, number, is_active, created_at, updated_at )`
+      `id, code, is_active, deleted_at, created_at,
+       room:rooms ( id, label, number, is_active, deleted_at, created_at, updated_at )`
     )
     .eq("code", code)
     .maybeSingle();
@@ -21,17 +22,29 @@ export const getRoomByCode = async (code: string) => {
     throw error;
   }
 
-  if (!data || !data.room?.is_active || !data.is_active) {
+  if (!data) {
+    return null;
+  }
+
+  const room = Array.isArray(data.room) ? data.room[0] : data.room;
+
+  if (
+    !room?.is_active ||
+    room.deleted_at !== null ||
+    !data.is_active ||
+    data.deleted_at !== null
+  ) {
     return null;
   }
 
   return {
-    room: data.room as Room,
+    room: (room as Room),
     code: {
       id: data.id,
-      room_id: (data.room as Room).id,
+      room_id: (room as Room).id,
       code: data.code,
       is_active: data.is_active,
+      deleted_at: data.deleted_at,
       created_at: data.created_at,
     } satisfies RoomCode,
   };
@@ -43,8 +56,10 @@ export const getRoomsWithCodes = async (): Promise<RoomWithCodes[]> => {
     .from("rooms")
     .select(
       `id, label, number, is_active, created_at, updated_at,
-       room_codes ( id, room_id, code, is_active, created_at )`
+       deleted_at,
+       room_codes ( id, room_id, code, is_active, deleted_at, created_at )`
     )
+    .is("deleted_at", null)
     .order("number", { ascending: true })
     .order("created_at", { ascending: true, foreignTable: "room_codes" });
 
@@ -56,6 +71,7 @@ export const getRoomsWithCodes = async (): Promise<RoomWithCodes[]> => {
     data ?? []
   ).map((room) => ({
     ...(room as Room),
-    codes: (room.room_codes as RoomCode[] | null) ?? [],
+    codes:
+      ((room.room_codes as RoomCode[] | null) ?? []).filter((code) => code.deleted_at === null),
   }));
 };

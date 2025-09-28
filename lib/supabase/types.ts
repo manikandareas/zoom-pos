@@ -12,6 +12,7 @@ export interface Room {
   label: string;
   number: string;
   is_active: boolean;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -21,6 +22,7 @@ export interface RoomCode {
   room_id: string;
   code: string;
   is_active: boolean;
+  deleted_at: string | null;
   created_at: string;
 }
 
@@ -29,6 +31,7 @@ export interface MenuCategory {
   name: string;
   position: number;
   is_active: boolean;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -41,6 +44,7 @@ export interface MenuItem {
   is_available: boolean;
   image_url: string | null;
   position: number;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -74,6 +78,7 @@ export interface Profile {
 }
 
 export interface BillingSummaryRow {
+  room_id: string;
   order_id: string;
   room_label: string;
   room_number: string;

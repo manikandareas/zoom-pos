@@ -128,6 +128,8 @@ Relasi:
 * `orders.room_id -> rooms.id`, `orders.guest_id = auth.uid()` (tamu)
 * `order_items.order_id -> orders.id`, `order_items.menu_item_id -> menu_items.id`
 
+**Soft delete:** `rooms`, `room_codes`, `menu_categories`, dan `menu_items` kini memiliki kolom `deleted_at` + flag aktif (`is_active`/`is_available`). Aksi "hapus" admin hanya mengisi `deleted_at` dan mematikan flag sehingga histori order tetap konsisten.
+
 > **SQL migrasi lengkap** (tabel, index, RLS, policy, trigger `updated_at`, view billing, realtime publication, Storage) sudah gue kasih sebelumnya; tinggal pakai. RLS memastikan tamu hanya akses order miliknya; admin bebas (via `is_admin()`). ([Supabase][4])
 
 ---

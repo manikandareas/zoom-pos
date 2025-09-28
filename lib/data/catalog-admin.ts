@@ -7,7 +7,8 @@ export const listCategories = async (): Promise<MenuCategory[]> => {
   const service = getSupabaseServiceRoleClient();
   const { data, error } = await service
     .from("menu_categories")
-    .select("id, name, position, is_active, created_at, updated_at")
+    .select("id, name, position, is_active, deleted_at, created_at, updated_at")
+    .is("deleted_at", null)
     .order("position", { ascending: true });
 
   if (error) {
@@ -34,13 +35,25 @@ export const upsertCategory = async (category: Partial<MenuCategory>) => {
 
 export const deleteCategory = async (categoryId: string) => {
   const service = getSupabaseServiceRoleClient();
+  const now = new Date().toISOString();
   const { error } = await service
     .from("menu_categories")
-    .delete()
-    .eq("id", categoryId);
+    .update({ is_active: false, deleted_at: now })
+    .eq("id", categoryId)
+    .is("deleted_at", null);
 
   if (error) {
     throw error;
+  }
+
+  const { error: itemsError } = await service
+    .from("menu_items")
+    .update({ is_available: false, deleted_at: now })
+    .eq("category_id", categoryId)
+    .is("deleted_at", null);
+
+  if (itemsError) {
+    throw itemsError;
   }
 };
 
@@ -49,8 +62,9 @@ export const listMenuItems = async (): Promise<MenuItem[]> => {
   const { data, error } = await service
     .from("menu_items")
     .select(
-      "id, category_id, name, price, is_available, image_url, position, created_at, updated_at"
+      "id, category_id, name, price, is_available, image_url, position, deleted_at, created_at, updated_at"
     )
+    .is("deleted_at", null)
     .order("position", { ascending: true });
 
   if (error) {
@@ -65,16 +79,20 @@ export const listMenuItemsWithCategory = async () => {
   const { data, error } = await service
     .from("menu_items")
     .select(
-      `id, category_id, name, price, is_available, image_url, position, created_at, updated_at,
-       category:menu_categories ( id, name )`
+      `id, category_id, name, price, is_available, image_url, position, deleted_at, created_at, updated_at,
+       category:menu_categories ( id, name, deleted_at )`
     )
+    .is("deleted_at", null)
     .order("position", { ascending: true });
 
   if (error) {
     throw error;
   }
 
-  return data ?? [];
+  return (data ?? []).filter((item) => {
+    const category = Array.isArray(item.category) ? item.category[0] : item.category;
+    return !(category && category.deleted_at !== null);
+  });
 };
 
 export const upsertMenuItem = async (item: Partial<MenuItem>) => {
@@ -94,7 +112,12 @@ export const upsertMenuItem = async (item: Partial<MenuItem>) => {
 
 export const deleteMenuItem = async (itemId: string) => {
   const service = getSupabaseServiceRoleClient();
-  const { error } = await service.from("menu_items").delete().eq("id", itemId);
+  const now = new Date().toISOString();
+  const { error } = await service
+    .from("menu_items")
+    .update({ is_available: false, deleted_at: now })
+    .eq("id", itemId)
+    .is("deleted_at", null);
 
   if (error) {
     throw error;

@@ -13,8 +13,8 @@ export const getActiveMenuCatalog = async (): Promise<CategoryWithItems[]> => {
   const { data, error } = await supabase
     .from("menu_categories")
     .select(
-      `id, name, position, is_active, created_at, updated_at,
-       menu_items ( id, category_id, name, price, is_available, image_url, position, created_at, updated_at )`
+      `id, name, position, is_active, deleted_at, created_at, updated_at,
+       menu_items ( id, category_id, name, price, is_available, image_url, position, deleted_at, created_at, updated_at )`
     )
     .eq("is_active", true)
     .order("position", { ascending: true })
@@ -28,6 +28,10 @@ export const getActiveMenuCatalog = async (): Promise<CategoryWithItems[]> => {
     data ?? []
   ).map((category) => ({
     ...category,
-    items: (category.menu_items as MenuItem[] | null)?.filter((item) => item.is_available) ?? [],
-  }));
+    items:
+      (category.menu_items as MenuItem[] | null)?.filter(
+        (item) => item.is_available && item.deleted_at === null
+      ) ?? [],
+  }))
+    .filter((category) => category.deleted_at === null);
 };

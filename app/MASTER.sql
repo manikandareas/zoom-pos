@@ -12,6 +12,7 @@ create table if not exists public.rooms (
   label text not null,
   number text not null,
   is_active boolean default true,
+  deleted_at timestamptz,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -21,6 +22,7 @@ create table if not exists public.room_codes (
   room_id uuid not null references public.rooms(id) on delete cascade,
   code text unique not null,
   is_active boolean default true,
+  deleted_at timestamptz,
   created_at timestamptz default now()
 );
 
@@ -29,6 +31,7 @@ create table if not exists public.menu_categories (
   name text not null,
   position int default 0,
   is_active boolean default true,
+  deleted_at timestamptz,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -41,6 +44,7 @@ create table if not exists public.menu_items (
   is_available boolean default true,
   image_url text,
   position int default 0,
+  deleted_at timestamptz,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -130,12 +134,12 @@ using (public.is_admin(auth.uid()));
 drop policy if exists "cat_read_active" on public.menu_categories;
 create policy "cat_read_active" on public.menu_categories
 for select to public
-using (is_active = true);
+using (is_active = true and deleted_at is null);
 
 drop policy if exists "item_read_available" on public.menu_items;
 create policy "item_read_available" on public.menu_items
 for select to public
-using (is_available = true);
+using (is_available = true and deleted_at is null);
 
 -- ROOMS / ROOM_CODES
 drop policy if exists "rooms_admin_all" on public.rooms;
@@ -151,7 +155,7 @@ using (public.is_admin(auth.uid()));
 drop policy if exists "room_codes_public_read" on public.room_codes;
 create policy "room_codes_public_read" on public.room_codes
 for select to public
-using (is_active = true);
+using (is_active = true and deleted_at is null);
 
 -- ORDERS
 drop policy if exists "orders_guest_insert_own" on public.orders;

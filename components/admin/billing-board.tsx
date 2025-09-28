@@ -56,7 +56,7 @@ export const BillingBoard = ({ summary, initialRows }: BillingBoardProps) => {
 				.from("orders")
 				.select(
 					`id, room_id, guest_id, status, sub_total, created_at, updated_at,
-           rooms ( label, number )`,
+           room:rooms ( label, number )`,
 				)
 				.order("created_at", { ascending: true });
 
@@ -71,20 +71,20 @@ export const BillingBoard = ({ summary, initialRows }: BillingBoardProps) => {
 				return;
 			}
 
-			const mapped = (data ?? []).map(
-				(order) =>
-					({
-						order_id: order.id,
-						room_id: order.room_id,
-						room_label: order.rooms?.label ?? "",
-						room_number: order.rooms?.number ?? "",
-						guest_id: order.guest_id,
-						sub_total: Number(order.sub_total ?? 0),
-						status: order.status as OrderStatus,
-						created_at: order.created_at,
-						updated_at: order.updated_at,
-					}) satisfies BillingSummaryRow,
-			);
+			const mapped = (data ?? []).map((order) => {
+				const relatedRoom = Array.isArray(order.room) ? order.room[0] : order.room;
+				return {
+					order_id: order.id,
+					room_id: order.room_id,
+					room_label: relatedRoom?.label ?? "",
+					room_number: relatedRoom?.number ?? "",
+					guest_id: order.guest_id,
+					sub_total: Number(order.sub_total ?? 0),
+					status: order.status as OrderStatus,
+					created_at: order.created_at,
+					updated_at: order.updated_at,
+				} satisfies BillingSummaryRow;
+			});
 
 			setRows(mapped);
 		},

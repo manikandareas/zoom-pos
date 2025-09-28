@@ -34,6 +34,9 @@ export const submitOrderAction = async (
   }
 
   const guest = await ensureGuestSession();
+  if (!guest) {
+    return { error: "Sesi tamu tidak ditemukan" };
+  }
 
   const roomData = await getRoomByCode(parsed.data.room_code);
   if (!roomData || roomData.room.id !== parsed.data.room_id) {
@@ -44,7 +47,10 @@ export const submitOrderAction = async (
     const orderPayload = {
       room_id: parsed.data.room_id,
       note: parsed.data.note ?? undefined,
-      items: parsed.data.items,
+      items: parsed.data.items.map((item) => ({
+        ...item,
+        note: item.note ?? undefined,
+      })),
     };
     const orderId = await createGuestOrder(guest.id, orderPayload);
     return { success: true, orderId };

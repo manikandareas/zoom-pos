@@ -113,7 +113,7 @@ export const RoomsManager = ({ rooms, codes }: RoomsManagerProps) => {
 		startTransition(async () => {
 			try {
 				const result = await upsertRoomAction(values);
-				if (result?.error) {
+				if (result && "error" in result && result.error) {
 					setErrorMessage(result.error);
 					return;
 				}
@@ -131,7 +131,7 @@ export const RoomsManager = ({ rooms, codes }: RoomsManagerProps) => {
 		startTransition(async () => {
 			try {
 				const result = await generateRoomCodeAction(roomId);
-				if (result?.error) {
+				if (result && "error" in result && result.error) {
 					setErrorMessage(result.error);
 				}
 			} catch (error) {
@@ -154,7 +154,7 @@ export const RoomsManager = ({ rooms, codes }: RoomsManagerProps) => {
 					code: code.code,
 					is_active: nextIsActive,
 				});
-				if (result?.error) {
+				if (result && "error" in result && result.error) {
 					setErrorMessage(result.error);
 				}
 			} catch (error) {
@@ -169,7 +169,7 @@ export const RoomsManager = ({ rooms, codes }: RoomsManagerProps) => {
 	const handleDeleteCode = (codeId: string) => {
 		if (
 			typeof window !== "undefined" &&
-			!window.confirm("Hapus kode kamar ini?")
+			!window.confirm("Nonaktifkan kode kamar ini? QR yang ada tidak lagi bisa dipakai.")
 		) {
 			return;
 		}
@@ -177,10 +177,13 @@ export const RoomsManager = ({ rooms, codes }: RoomsManagerProps) => {
 		setErrorMessage(null);
 		startTransition(async () => {
 			try {
-				await deleteRoomCodeAction(codeId);
+				const result = await deleteRoomCodeAction(codeId);
+				if (result && "error" in result && result.error) {
+					setErrorMessage(result.error);
+				}
 			} catch (error) {
 				console.error(error);
-				setErrorMessage("Gagal menghapus kode kamar");
+				setErrorMessage("Gagal menonaktifkan kode kamar");
 			} finally {
 				setCodeAction(null);
 			}
@@ -190,7 +193,7 @@ export const RoomsManager = ({ rooms, codes }: RoomsManagerProps) => {
 	const handleDeleteRoom = (roomId: string) => {
 		if (
 			typeof window !== "undefined" &&
-			!window.confirm("Hapus kamar dan seluruh kodenya?")
+			!window.confirm("Nonaktifkan kamar ini dan seluruh kode QR terkait?")
 		) {
 			return;
 		}
@@ -198,10 +201,13 @@ export const RoomsManager = ({ rooms, codes }: RoomsManagerProps) => {
 		setErrorMessage(null);
 		startTransition(async () => {
 			try {
-				await deleteRoomAction(roomId);
+				const result = await deleteRoomAction(roomId);
+				if (result && "error" in result && result.error) {
+					setErrorMessage(result.error);
+				}
 			} catch (error) {
 				console.error(error);
-				setErrorMessage("Gagal menghapus kamar");
+				setErrorMessage("Gagal menonaktifkan kamar");
 			} finally {
 				setRoomAction(null);
 			}

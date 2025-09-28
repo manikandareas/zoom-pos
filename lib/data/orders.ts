@@ -93,7 +93,7 @@ export const getOrderWithItems = async (orderId: string): Promise<OrderWithItems
     .from("orders")
     .select(
       `id, room_id, guest_id, status, note, sub_total, rejection_reason, created_at, updated_at,
-       room:rooms ( id, label, number, is_active, created_at, updated_at ),
+       room:rooms ( id, label, number, is_active, deleted_at, created_at, updated_at ),
        items:order_items ( id, order_id, menu_item_id, menu_item_name, unit_price, quantity, note, created_at )`
     )
     .eq("id", orderId)
@@ -107,9 +107,22 @@ export const getOrderWithItems = async (orderId: string): Promise<OrderWithItems
     return null;
   }
 
+  const relatedRoom = Array.isArray(data.room) ? data.room[0] : data.room;
+  const room: Room = relatedRoom
+    ? (relatedRoom as Room)
+    : {
+        id: data.room_id,
+        label: "",
+        number: "",
+        is_active: true,
+        deleted_at: null,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      };
+
   return {
     ...(data as Order),
-    room: data.room as Room,
+    room,
     items: (data.items as OrderItem[] | null) ?? [],
   };
 };
@@ -170,7 +183,7 @@ export const getAdminOrders = async (
     .from("orders")
     .select(
       `id, room_id, guest_id, status, note, sub_total, rejection_reason, created_at, updated_at,
-       room:rooms ( id, label, number, is_active, created_at, updated_at ),
+       room:rooms ( id, label, number, is_active, deleted_at, created_at, updated_at ),
        items:order_items ( id, order_id, menu_item_id, menu_item_name, unit_price, quantity, note, created_at )`
     )
     .order("created_at", { ascending: false });
@@ -195,11 +208,25 @@ export const getAdminOrders = async (
     throw error;
   }
 
-  return (data ?? []).map((order) => ({
-    ...(order as Order),
-    room: order.room as Room,
-    items: (order.items as OrderItem[] | null) ?? [],
-  }));
+  return (data ?? []).map((order) => {
+    const relatedRoom = Array.isArray(order.room) ? order.room[0] : order.room;
+    const room: Room = relatedRoom
+      ? (relatedRoom as Room)
+      : {
+          id: order.room_id,
+          label: "",
+          number: "",
+          is_active: true,
+          deleted_at: null,
+          created_at: order.created_at,
+          updated_at: order.updated_at,
+        };
+    return {
+      ...(order as Order),
+      room,
+      items: (order.items as OrderItem[] | null) ?? [],
+    };
+  });
 };
 
 export const updateOrderStatus = async (

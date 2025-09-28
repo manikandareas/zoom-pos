@@ -142,10 +142,42 @@ export const CatalogManager = ({
 		setErrorMessage(null);
 	};
 
+	const handleArchiveCategory = (category: MenuCategory) => {
+		if (
+			typeof window !== "undefined" &&
+			!window.confirm("Sembunyikan kategori ini? Item yang terkait tetap tersedia di riwayat pesanan.")
+		) {
+			return;
+		}
+		setErrorMessage(null);
+		startTransition(async () => {
+			const result = await deleteCategoryAction(category.id);
+			if (result && "error" in result && result.error) {
+				setErrorMessage(result.error);
+			}
+		});
+	};
+
+	const handleArchiveItem = (item: MenuItem) => {
+		if (
+			typeof window !== "undefined" &&
+			!window.confirm("Sembunyikan menu ini dari katalog tamu?")
+		) {
+			return;
+		}
+		setErrorMessage(null);
+		startTransition(async () => {
+			const result = await deleteMenuItemAction(item.id);
+			if (result && "error" in result && result.error) {
+				setErrorMessage(result.error);
+			}
+		});
+	};
+
 	const onSubmitCategory = categoryForm.handleSubmit((values) => {
 		startTransition(async () => {
 			const result = await upsertCategoryAction(values);
-			if (result?.error) {
+			if (result && "error" in result && result.error) {
 				setErrorMessage(result.error);
 				return;
 			}
@@ -191,7 +223,7 @@ export const CatalogManager = ({
 
 			startTransition(async () => {
 				const result = await upsertMenuItemAction(payload);
-				if (result?.error) {
+				if (result && "error" in result && result.error) {
 					setErrorMessage(result.error);
 					return;
 				}
@@ -224,6 +256,7 @@ export const CatalogManager = ({
 						<Button
 							size="icon"
 							variant="outline"
+							disabled={isPending}
 							onClick={() => handleOpenCategoryDialog(category)}
 						>
 							<Pencil className="h-4 w-4" />
@@ -231,9 +264,8 @@ export const CatalogManager = ({
 						<Button
 							size="icon"
 							variant="destructive"
-							onClick={() =>
-								startTransition(async () => deleteCategoryAction(category.id))
-							}
+							disabled={isPending}
+							onClick={() => handleArchiveCategory(category)}
 						>
 							<Trash2 className="h-4 w-4" />
 						</Button>
@@ -263,6 +295,7 @@ export const CatalogManager = ({
 						<Button
 							size="icon"
 							variant="outline"
+							disabled={isPending}
 							onClick={() => handleOpenItemDialog(item)}
 						>
 							<Pencil className="mr-1 h-4 w-4" />
@@ -270,9 +303,8 @@ export const CatalogManager = ({
 						<Button
 							size="icon"
 							variant="destructive"
-							onClick={() =>
-								startTransition(async () => deleteMenuItemAction(item.id))
-							}
+							disabled={isPending}
+							onClick={() => handleArchiveItem(item)}
 						>
 							<Trash2 className="h-4 w-4" />
 						</Button>

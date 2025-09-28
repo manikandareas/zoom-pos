@@ -38,6 +38,29 @@ const isUniqueViolation = (error: unknown) => {
 	);
 };
 
+
+const extractErrorMessage = (error: unknown): string | null => {
+	if (error && typeof error === "object") {
+		if ("message" in error && typeof (error as { message?: unknown }).message === "string") {
+			return (error as { message: string }).message;
+		}
+		if ("error" in error && typeof (error as { error?: unknown }).error === "string") {
+			return (error as { error: string }).error;
+		}
+	}
+	return null;
+};
+
+const withActionError = async <T>(fn: () => Promise<T>, fallback: string) => {
+	try {
+		return await fn();
+	} catch (error) {
+		console.error(fallback, error);
+		const message = extractErrorMessage(error);
+		return { error: message ? `${fallback}: ${message}` : fallback };
+	}
+};
+
 export const upsertRoomAction = async (input: RoomFormInput) => {
 	await requireAdmin();
 	const parsed = roomFormSchema.safeParse(input);
@@ -45,15 +68,30 @@ export const upsertRoomAction = async (input: RoomFormInput) => {
 		return { error: "Data kamar tidak valid" };
 	}
 
-	await upsertRoom(parsed.data);
-	revalidatePath("/admin/rooms");
-	return { success: true };
+	const result = await withActionError(
+		async () => {
+			await upsertRoom(parsed.data);
+			revalidatePath("/admin/rooms");
+			return { success: true } as const;
+		},
+		"Gagal menyimpan data kamar"
+	);
+
+	return result;
 };
 
 export const deleteRoomAction = async (roomId: string) => {
 	await requireAdmin();
-	await deleteRoom(roomId);
-	revalidatePath("/admin/rooms");
+	const result = await withActionError(
+		async () => {
+			await deleteRoom(roomId);
+			revalidatePath("/admin/rooms");
+			return { success: true } as const;
+		},
+		"Gagal menonaktifkan kamar"
+	);
+
+	return result;
 };
 
 export const upsertRoomCodeAction = async (input: RoomCodeFormInput) => {
@@ -63,15 +101,30 @@ export const upsertRoomCodeAction = async (input: RoomCodeFormInput) => {
 		return { error: "Data kode kamar tidak valid" };
 	}
 
-	await upsertRoomCode(parsed.data);
-	revalidatePath("/admin/rooms");
-	return { success: true };
+	const result = await withActionError(
+		async () => {
+			await upsertRoomCode(parsed.data);
+			revalidatePath("/admin/rooms");
+			return { success: true } as const;
+		},
+		"Gagal memperbarui kode kamar"
+	);
+
+	return result;
 };
 
 export const deleteRoomCodeAction = async (codeId: string) => {
 	await requireAdmin();
-	await deleteRoomCode(codeId);
-	revalidatePath("/admin/rooms");
+	const result = await withActionError(
+		async () => {
+			await deleteRoomCode(codeId);
+			revalidatePath("/admin/rooms");
+			return { success: true } as const;
+		},
+		"Gagal menonaktifkan kode kamar"
+	);
+
+	return result;
 };
 
 export const generateRoomCodeAction = async (roomId: string) => {

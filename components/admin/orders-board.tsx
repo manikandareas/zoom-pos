@@ -62,7 +62,7 @@ const fetchOrderDetails = async (
 		.from("orders")
 		.select(
 			`id, room_id, guest_id, status, note, sub_total, rejection_reason, created_at, updated_at,
-       rooms ( id, label, number, is_active, created_at, updated_at ),
+       rooms ( id, label, number, is_active, deleted_at, created_at, updated_at ),
        order_items ( id, order_id, menu_item_id, menu_item_name, unit_price, quantity, note, created_at )`,
 		)
 		.eq("id", orderId)
@@ -72,6 +72,8 @@ const fetchOrderDetails = async (
 		console.error("Failed to fetch order", error);
 		return null;
 	}
+
+	const relatedRoom = Array.isArray(data.rooms) ? data.rooms[0] : data.rooms;
 
 	return {
 		id: data.id,
@@ -84,12 +86,13 @@ const fetchOrderDetails = async (
 		created_at: data.created_at,
 		updated_at: data.updated_at,
 		room: {
-			id: data.rooms?.id ?? data.room_id,
-			label: data.rooms?.label ?? "",
-			number: data.rooms?.number ?? "",
-			is_active: data.rooms?.is_active ?? true,
-			created_at: data.rooms?.created_at ?? data.created_at,
-			updated_at: data.rooms?.updated_at ?? data.updated_at,
+			id: relatedRoom?.id ?? data.room_id,
+			label: relatedRoom?.label ?? "",
+			number: relatedRoom?.number ?? "",
+			is_active: relatedRoom?.is_active ?? true,
+			deleted_at: relatedRoom?.deleted_at ?? null,
+			created_at: relatedRoom?.created_at ?? data.created_at,
+			updated_at: relatedRoom?.updated_at ?? data.updated_at,
 		},
 		items:
 			(data.order_items ?? []).map((item) => ({
