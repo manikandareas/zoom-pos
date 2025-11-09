@@ -31,13 +31,16 @@ Hotel Zoom POS is a Next.js 15 food ordering system for hotels with QR code-base
 **Server Actions**: Admin operations use Next.js Server Actions for security:
 - Located in `actions.ts` files alongside pages
 - Handle order status updates, catalog management, room management
-- Protected by admin role checks via Supabase
+- Protected by `requireAdmin()` helper from `lib/supabase/auth.ts`
+- Trigger `revalidatePath()` for cache invalidation after mutations
+- Broadcast real-time updates to guests after status changes
 
-**Supabase Integration**:
-- SSR client in server components via `@supabase/ssr`
-- Browser client for real-time subscriptions
-- Service client for admin operations
-- Middleware protects admin routes with user authentication
+**Supabase Integration**: Three distinct client patterns:
+- **Server Client** (`lib/supabase/server.ts`) - SSR with cookie-based sessions, respects RLS
+- **Browser Client** (`lib/supabase/client.ts`) - Client components and real-time subscriptions
+- **Service Client** (`lib/supabase/service.ts`) - Bypasses RLS for admin operations (server-only)
+- Middleware (`middleware.ts`) protects admin routes with role verification
+- Guest sessions via `ensureGuestSession()` in `lib/auth/guest.ts`
 
 **Real-time Updates**:
 - Broadcast channels for room-specific status updates (`room:{room_id}`)
@@ -54,16 +57,21 @@ Core tables in `app/MASTER.sql`:
 
 Order status flow: `PENDING → ACCEPTED/REJECTED → IN_PREP → READY → DELIVERED → BILLED`
 
+All major tables use soft deletes (`deleted_at` timestamp) for audit trails and data recovery.
+
 ### File Organization
 
 - `lib/` - Utilities, validators, data access, and Supabase clients
   - `lib/supabase/` - Client configurations (server, browser, service)
-  - `lib/data/` - Database operations organized by feature
+  - `lib/data/` - Database operations organized by feature (orders, menu, rooms, catalog-admin, rooms-admin, billing)
   - `lib/validators/` - Zod schemas for form validation
+  - `lib/auth/` - Authentication helpers (guest sessions)
+  - `lib/realtime.ts` - Broadcast channel utilities
 - `components/` - Reusable UI components with shadcn/ui
   - `components/ui/` - Base UI components
-  - `components/admin/` - Admin-specific components
+  - `components/admin/` - Admin-specific components (orders-board, catalog-manager, rooms-manager, billing-board)
   - `components/order/` - Guest ordering components
+  - `components/providers/` - Supabase context providers
 
 ### Environment Variables
 

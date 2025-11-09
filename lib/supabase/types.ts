@@ -49,6 +49,15 @@ export interface MenuItem {
   updated_at: string;
 }
 
+export type PaymentStatus = "PENDING" | "PAID" | "FAILED" | "EXPIRED";
+
+export type PaymentMethod =
+  | "QRIS"
+  | "VIRTUAL_ACCOUNT"
+  | "EWALLET"
+  | "RETAIL_OUTLET"
+  | "CREDIT_CARD";
+
 export interface Order {
   id: string;
   room_id: string;
@@ -57,6 +66,14 @@ export interface Order {
   note: string | null;
   sub_total: number;
   rejection_reason: string | null;
+  // Payment fields
+  payment_status?: PaymentStatus;
+  payment_method?: PaymentMethod | null;
+  payment_id?: string | null;
+  external_id?: string | null;
+  payment_url?: string | null;
+  paid_at?: string | null;
+  guest_phone?: string | null;
   created_at: string;
   updated_at: string;
 }

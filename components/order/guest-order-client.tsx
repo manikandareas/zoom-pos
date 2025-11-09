@@ -11,6 +11,7 @@ import {
 	useState,
 } from "react";
 import { useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
 import {
 	type SubmitOrderResult,
 	submitOrderAction,
@@ -18,6 +19,7 @@ import {
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
 	Card,
 	CardContent,
@@ -89,8 +91,10 @@ export const GuestOrderClient = ({
 	existingOrders,
 	guestId,
 }: GuestOrderClientProps) => {
+	const router = useRouter();
 	const [cart, setCart] = useState<Record<string, CartItem>>({});
 	const [note, setNote] = useState("");
+	const [guestPhone, setGuestPhone] = useState("");
 	const [isSheetOpen, setSheetOpen] = useState(false);
 	const [orders, setOrders] = useState(existingOrders);
 	const [actionState, formAction] = useActionState(
@@ -135,50 +139,19 @@ export const GuestOrderClient = ({
 
 		lastHandledActionRef.current = actionState;
 
-		const noteSnapshot = noteRef.current;
-		const cartSnapshot = cartItemsRef.current;
-		const totalSnapshot = subTotalRef.current;
-
 		setCart({});
 		setNote("");
+		setGuestPhone("");
 
-		if (!actionState.orderId) {
+		if (!actionState.orderId || !actionState.paymentUrl) {
 			setSheetOpen(false);
 			return;
 		}
 
-		const createdAt = new Date().toISOString();
-		setOrders((prev) => {
-			if (prev.some((order) => order.id === actionState.orderId)) {
-				return prev;
-			}
-			return [
-				{
-					id: actionState.orderId as string,
-					room_id: room.id,
-					guest_id: guestId,
-					status: "PENDING",
-					note: noteSnapshot || null,
-					sub_total: totalSnapshot,
-					rejection_reason: null,
-					created_at: createdAt,
-					updated_at: createdAt,
-					items: cartSnapshot.map((item) => ({
-						id: `${actionState.orderId}-${item.menuItemId}`,
-						order_id: actionState.orderId as string,
-						menu_item_id: item.menuItemId,
-						menu_item_name: item.name,
-						unit_price: item.price,
-						quantity: item.quantity,
-						note: null,
-						created_at: createdAt,
-					})),
-				},
-				...prev,
-			];
-		});
+		// Redirect to payment page
 		setSheetOpen(false);
-	}, [actionState, guestId, room.id]);
+		router.push(`/order/${roomCode}/payment?orderId=${actionState.orderId}`);
+	}, [actionState, router, roomCode]);
 
 	const handleStatusBroadcast = useCallback(
 		(payload: { order_id: string; status: string; reason?: string | null }) => {
@@ -205,6 +178,7 @@ export const GuestOrderClient = ({
 			room_id: room.id,
 			room_code: roomCode,
 			note: note || null,
+			guest_phone: guestPhone || null,
 			items: cartItems.map((item) => ({
 				menu_item_id: item.menuItemId,
 				menu_item_name: item.name,
@@ -213,7 +187,7 @@ export const GuestOrderClient = ({
 				note: null,
 			})),
 		});
-	}, [cartItems, note, room.id, roomCode]);
+	}, [cartItems, note, guestPhone, room.id, roomCode]);
 
 	const addToCart = (item: { id: string; name: string; price: number }) => {
 		setCart((prev) => {
@@ -418,6 +392,25 @@ export const GuestOrderClient = ({
 								</div>
 								<div className="space-y-2">
 									<label
+										htmlFor="guest-phone-desktop"
+										className="text-xs font-medium text-muted-foreground"
+									>
+										Nomor HP (opsional)
+									</label>
+									<Input
+										id="guest-phone-desktop"
+										type="tel"
+										placeholder="Contoh: 08123456789"
+										value={guestPhone}
+										onChange={(event) => setGuestPhone(event.target.value)}
+										name="guest_phone"
+									/>
+									<p className="text-xs text-muted-foreground">
+										Untuk notifikasi pembayaran via SMS
+									</p>
+								</div>
+								<div className="space-y-2">
+									<label
 										htmlFor="note"
 										className="text-xs font-medium text-muted-foreground"
 									>
@@ -584,6 +577,25 @@ export const GuestOrderClient = ({
 										</div>
 									</div>
 								))}
+							</div>
+							<div className="space-y-2">
+								<label
+									htmlFor="guest-phone-mobile"
+									className="text-xs font-medium text-muted-foreground"
+								>
+									Nomor HP (opsional)
+								</label>
+								<Input
+									id="guest-phone-mobile"
+									type="tel"
+									placeholder="Contoh: 08123456789"
+									value={guestPhone}
+									onChange={(event) => setGuestPhone(event.target.value)}
+									name="guest_phone"
+								/>
+								<p className="text-xs text-muted-foreground">
+									Untuk notifikasi pembayaran via SMS
+								</p>
 							</div>
 							<div className="space-y-2">
 								<label

@@ -58,6 +58,16 @@ create table if not exists public.orders (
   note text,
   sub_total numeric(10,2) not null,
   rejection_reason text,
+  -- Payment fields (Xendit integration)
+  payment_status text default 'PENDING'
+    check (payment_status in ('PENDING','PAID','FAILED','EXPIRED')),
+  payment_method text
+    check (payment_method is null or payment_method in ('QRIS','VIRTUAL_ACCOUNT','EWALLET','RETAIL_OUTLET','CREDIT_CARD')),
+  payment_id text, -- Xendit invoice/payment ID
+  external_id text unique, -- unique transaction reference for idempotency
+  payment_url text, -- Xendit payment page URL
+  paid_at timestamptz, -- timestamp when payment confirmed
+  guest_phone text, -- optional phone number for payment notifications
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -82,6 +92,9 @@ create table if not exists public.profiles (
 -- 2) INDEXES
 create index if not exists idx_orders_room_id on public.orders (room_id);
 create index if not exists idx_orders_status  on public.orders (status);
+create index if not exists idx_orders_payment_status on public.orders (payment_status);
+create index if not exists idx_orders_external_id on public.orders (external_id);
+create index if not exists idx_orders_payment_id on public.orders (payment_id);
 create index if not exists idx_order_items_order_id on public.order_items (order_id);
 create index if not exists idx_room_codes_code on public.room_codes (code);
 create index if not exists idx_menu_items_category on public.menu_items (category_id);
@@ -158,6 +171,9 @@ for select to public
 using (is_active = true and deleted_at is null);
 
 -- ORDERS
+-- Note: Guests can INSERT and READ their own orders, but NOT UPDATE
+-- Payment info updates (payment_url, payment_id, etc.) must use service role client
+-- to bypass RLS, as guests don't have UPDATE permission
 drop policy if exists "orders_guest_insert_own" on public.orders;
 create policy "orders_guest_insert_own" on public.orders
 for insert to authenticated

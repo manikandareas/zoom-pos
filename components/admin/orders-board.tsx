@@ -62,6 +62,7 @@ const fetchOrderDetails = async (
 		.from("orders")
 		.select(
 			`id, room_id, guest_id, status, note, sub_total, rejection_reason, created_at, updated_at,
+       payment_status, payment_method, payment_id, paid_at, guest_phone,
        rooms ( id, label, number, is_active, deleted_at, created_at, updated_at ),
        order_items ( id, order_id, menu_item_id, menu_item_name, unit_price, quantity, note, created_at )`,
 		)
@@ -83,6 +84,11 @@ const fetchOrderDetails = async (
 		note: data.note,
 		sub_total: Number(data.sub_total ?? 0),
 		rejection_reason: data.rejection_reason,
+		payment_status: data.payment_status,
+		payment_method: data.payment_method,
+		payment_id: data.payment_id,
+		paid_at: data.paid_at,
+		guest_phone: data.guest_phone,
 		created_at: data.created_at,
 		updated_at: data.updated_at,
 		room: {
@@ -355,14 +361,41 @@ export const OrdersBoard = ({
 											{CURRENCY_FORMATTER.format(order.sub_total)}
 										</Td>
 										<Td>
-											<Badge
-												className={cn(
-													"capitalize",
-													ORDER_STATUS_COLORS[order.status],
+											<div className="flex flex-col gap-1">
+												<Badge
+													className={cn(
+														"capitalize",
+														ORDER_STATUS_COLORS[order.status],
+													)}
+												>
+													{ORDER_STATUS_LABEL[order.status]}
+												</Badge>
+												{order.payment_status && (
+													<Badge
+														variant={
+															order.payment_status === "PAID"
+																? "default"
+																: order.payment_status === "PENDING"
+																	? "secondary"
+																	: "destructive"
+														}
+														className="text-[10px]"
+													>
+														{order.payment_status === "PAID"
+															? "✓ Dibayar"
+															: order.payment_status === "PENDING"
+																? "⏳ Menunggu"
+																: order.payment_status === "EXPIRED"
+																	? "⏰ Kedaluwarsa"
+																	: "✗ Gagal"}
+													</Badge>
 												)}
-											>
-												{ORDER_STATUS_LABEL[order.status]}
-											</Badge>
+												{order.payment_method && order.payment_status === "PAID" && (
+													<span className="text-[10px] text-muted-foreground">
+														{order.payment_method}
+													</span>
+												)}
+											</div>
 										</Td>
 										<Td className="space-y-2 text-xs">
 											{order.status === "PENDING" && (
