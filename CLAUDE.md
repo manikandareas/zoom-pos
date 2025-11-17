@@ -20,6 +20,7 @@ Hotel Zoom POS is a Next.js 15 food ordering system for hotels with QR code-base
 - **Backend**: Supabase (PostgreSQL, Auth, Realtime, Storage)
 - **UI**: shadcn/ui components with Tailwind CSS
 - **Auth**: Supabase anonymous sign-in for guests, email/password for admins
+- **Payment**: Xendit integration for guest order payments (QRIS, Virtual Account, E-Wallet, etc.)
 
 ### Key Patterns
 
@@ -57,15 +58,18 @@ Core tables in `app/MASTER.sql`:
 
 Order status flow: `PENDING → ACCEPTED/REJECTED → IN_PREP → READY → DELIVERED → BILLED`
 
+Payment status flow: `PENDING → PAID/FAILED/EXPIRED`
+
 All major tables use soft deletes (`deleted_at` timestamp) for audit trails and data recovery.
 
 ### File Organization
 
 - `lib/` - Utilities, validators, data access, and Supabase clients
   - `lib/supabase/` - Client configurations (server, browser, service)
-  - `lib/data/` - Database operations organized by feature (orders, menu, rooms, catalog-admin, rooms-admin, billing)
+  - `lib/data/` - Database operations organized by feature (orders, menu, rooms, catalog-admin, rooms-admin, billing, payments)
   - `lib/validators/` - Zod schemas for form validation
   - `lib/auth/` - Authentication helpers (guest sessions)
+  - `lib/xendit/` - Xendit payment gateway integration (client, webhook validation)
   - `lib/realtime.ts` - Broadcast channel utilities
 - `components/` - Reusable UI components with shadcn/ui
   - `components/ui/` - Base UI components
@@ -80,6 +84,12 @@ Required for Supabase integration (store in `.env.local`):
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` (server-side only)
 
+Required for Xendit payment integration:
+- `XENDIT_SECRET_KEY` (server-side only)
+- `XENDIT_WEBHOOK_TOKEN` (server-side only, for webhook verification)
+
+See `.env.local.example` for detailed setup instructions.
+
 ## Security
 
 **Row Level Security (RLS)**: All tables use Supabase RLS policies
@@ -89,12 +99,15 @@ Required for Supabase integration (store in `.env.local`):
 
 **Anonymous Authentication**: Guests use Supabase anonymous sign-in for order tracking without registration
 
+**Payment Security**: Xendit webhooks are verified using HMAC signature validation in `lib/xendit/webhook-validator.ts`
+
 ## Key Features
 
-- **Guest Ordering**: QR code → anonymous sign-in → browse menu → place order → real-time status updates
+- **Guest Ordering**: QR code → anonymous sign-in → browse menu → place order → payment → real-time status updates
 - **Admin Dashboard**: Real-time order board, catalog management, room/QR management, billing export
 - **Real-time Updates**: Instant status updates via Supabase Realtime
 - **Image Management**: Menu images via Supabase Storage with proper access controls
+- **Payment Processing**: Xendit integration for multiple payment methods (QRIS, Virtual Account, E-Wallet, Retail Outlet, Credit Card)
 
 ## Testing
 

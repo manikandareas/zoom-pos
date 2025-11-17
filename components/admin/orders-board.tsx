@@ -376,7 +376,7 @@ export const OrdersBoard = ({
 															order.payment_status === "PAID"
 																? "default"
 																: order.payment_status === "PENDING"
-																	? "secondary"
+																	? "warning"
 																	: "destructive"
 														}
 														className="text-[10px]"
